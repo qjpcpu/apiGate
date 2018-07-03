@@ -1,0 +1,29 @@
+#!/bin/bash
+
+case X$1 in
+    Xbuild)
+        if [ -z "$2" ];then
+            echo "Usage: ./control build VERSION"
+            echo "请提供版本号"
+            exit -1
+        fi
+        go build -ldflags "-s -X main.g_Version=$2 \
+					   -X main.g_BuildDate=`date +%Y-%m-%d,%H:%M:%S` \
+					   -X main.g_CommitID=`git rev-parse HEAD`"
+        ;;
+    Xinstall)
+        if [ -z "$2" ];then
+            echo "Usage: ./control install VERSION"
+            echo "请提供版本号"
+            exit -1
+        fi
+        go install -ldflags "-s -X main.g_Version=$2 \
+					   -X main.g_BuildDate=`date  +%Y-%m-%d,%H:%M:%S` \
+					   -X main.g_CommitID=`git rev-parse HEAD`"
+        ;;
+    X*)
+        echo "Usage: $0  build <version>|install <version>"
+        exit -1
+        ;;
+esac
+

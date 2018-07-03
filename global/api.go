@@ -1,0 +1,121 @@
+package global
+
+import (
+	"fmt"
+	"github.com/qjpcpu/apiGate/embed"
+	"github.com/qjpcpu/apiGate/mod"
+	"github.com/qjpcpu/apiGate/myrouter"
+	"os"
+	"sync"
+	"sync/atomic"
+)
+
+var (
+	RouterMutex          *sync.Mutex = &sync.Mutex{}
+	_routerIndex         int32       = 0
+	_black_uri_routers   [2]*myrouter.Router
+	_white_uri_routers   [2]*myrouter.Router
+	_normal_uri_routers  [2]*myrouter.Router
+	_buildin_uri_routers [2]*myrouter.Router
+	// 频控
+	freq_ctrl_routers [2]*myrouter.Router
+)
+
+const OrigPrefix = "_"
+
+func calcRouterIndex() int32 {
+	return _routerIndex % 2
+}
+
+func InitUri(api mod.API) {
+	rindex := (_routerIndex + 1) % 2
+	_black_uri_router := myrouter.New()
+	_white_uri_router := myrouter.New()
+	_normal_uri_router := myrouter.New()
+	_freq_uri_router := myrouter.New()
+	for url, limit := range api.FreqCtrl {
+		p := "/" + OrigPrefix + url
+		hs := myrouter.HostSetting{
+			RouterPath: p,
+			Data:       limit,
+			PathRewrite: func(string) string {
+				return url
+			},
+		}
+		_freq_uri_router.HandlerFunc(mod.URI_METHOD, p, hs)
+	}
+	for _, group := range api.Paths {
+		if len(group.Proxy.Host) == 0 {
+			fmt.Println("Please set  proxy host")
+			os.Exit(1)
+		}
+		for _, p := range group.White {
+			hs := group.Proxy.GenRouterSetting(p)
+			hs.Scheme = group.Proxy.Scheme()
+			p = "/" + OrigPrefix + p
+			_white_uri_router.HandlerFunc(mod.URI_METHOD, p, hs)
+		}
+		for _, p := range group.Black {
+			hs := group.Proxy.GenRouterSetting(p)
+			hs.Scheme = group.Proxy.Scheme()
+			p = "/" + OrigPrefix + p
+			_black_uri_router.HandlerFunc(mod.URI_METHOD, p, hs)
+		}
+		for _, p := range group.Normal {
+			hs := group.Proxy.GenRouterSetting(p)
+			hs.Scheme = group.Proxy.Scheme()
+			p = "/" + OrigPrefix + p
+			_normal_uri_router.HandlerFunc(mod.URI_METHOD, p, hs)
+		}
+	}
+	_buildin_uri_router := initBuildinRouter()
+	_buildin_uri_routers[rindex] = _buildin_uri_router
+	_black_uri_routers[rindex] = _black_uri_router
+	_white_uri_routers[rindex] = _white_uri_router
+	_normal_uri_routers[rindex] = _normal_uri_router
+	freq_ctrl_routers[rindex] = _freq_uri_router
+	atomic.AddInt32(&_routerIndex, 1)
+}
+
+func initBuildinRouter() *myrouter.Router {
+	_buildin_uri_router := myrouter.New()
+	for name, path_info := range embed.Routers() {
+		_buildin_uri_router.HandlerFunc(mod.URI_METHOD, path_info, myrouter.HostSetting{
+			RouterPath:  path_info,
+			RouterName:  name,
+			PathRewrite: myrouter.DefaultPathRewrite,
+			Scheme:      "http",
+		})
+	}
+	return _buildin_uri_router
+}
+
+func FindBlackUri(host, path string) (*myrouter.HostSetting, bool) {
+	rindex := calcRouterIndex()
+	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
+	return mod.FindUri(_black_uri_routers[rindex], path)
+}
+
+func FindWhiteUri(host, path string) (*myrouter.HostSetting, bool) {
+	rindex := calcRouterIndex()
+	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
+	return mod.FindUri(_white_uri_routers[rindex], path)
+}
+
+func FindNormalUri(host, path string) (*myrouter.HostSetting, bool) {
+	rindex := calcRouterIndex()
+	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
+	return mod.FindUri(_normal_uri_routers[rindex], path)
+}
+
+func FindBuildinUri(host, path string) (*myrouter.HostSetting, bool) {
+	rindex := calcRouterIndex()
+	path = fmt.Sprintf("%s%s", embed.BUILDIN_PATH_PREFIX, path)
+	return mod.FindUri(_buildin_uri_routers[rindex], path)
+}
+
+func FindFreqUri(host, path string) (*myrouter.HostSetting, bool) {
+	rindex := calcRouterIndex()
+	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
+	return mod.FindUri(freq_ctrl_routers[rindex], path)
+}

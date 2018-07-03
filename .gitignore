@@ -1,0 +1,12 @@
+/WebMiddleware
+/log
+/apiGate
+/log/webMiddleWare.*
+/conf.d
+*.test
+.DS_Store
+*.prof
+/webMiddleWare.conf.online
+/.nfs*
+tools/y2j/y2j
+/upgrade.md
