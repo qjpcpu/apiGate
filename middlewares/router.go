@@ -5,9 +5,9 @@ package middlewares
 //
 //import (
 //	"github.com/gin-gonic/gin"
-//	"github.com/qjpcpu/apiGate/embed"
+//	"github.com/qjpcpu/apiGate/uri"
 //)
 //
 //func init() {
-//	embed.GET("/apigate/test", func(c *gin.Context) {})
+//	uri.GET("/apigate/test", func(c *gin.Context) {})
 //}

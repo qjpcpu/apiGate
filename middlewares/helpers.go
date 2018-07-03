@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/qjpcpu/apiGate/global"
+	"github.com/qjpcpu/apiGate/conf"
 	"github.com/qjpcpu/apiGate/myrouter"
-	"github.com/qjpcpu/apiGate/uid"
+	"github.com/qjpcpu/apiGate/unique-id"
 	"github.com/qjpcpu/log"
 	"io/ioutil"
 	"net/http"
@@ -40,22 +40,22 @@ func getProxySetting(c *gin.Context) (*myrouter.HostSetting, error) {
 
 func writeSession(c *gin.Context, value string) {
 	cookie := &http.Cookie{
-		Name:   global.SESSION_ID,
+		Name:   conf.SESSION_ID,
 		Value:  value,
 		Path:   "/",
-		MaxAge: global.G.SessionExpireSeconds,
-		Domain: global.G.Domain,
+		MaxAge: conf.Get().SessionExpireSeconds,
+		Domain: conf.Get().Domain,
 	}
 	http.SetCookie(c.Writer, cookie)
 }
 
 func expireSession(c *gin.Context) {
 	cookie := &http.Cookie{
-		Name:   global.SESSION_ID,
+		Name:   conf.SESSION_ID,
 		Value:  "",
 		Path:   "/",
 		MaxAge: -1, // delete cookie now
-		Domain: global.G.Domain,
+		Domain: conf.Get().Domain,
 	}
 	http.SetCookie(c.Writer, cookie)
 }
@@ -107,9 +107,9 @@ func writeUserServerSessionInfo(c *gin.Context, user_id string, session_ids ...s
 	} else {
 		session_id = uid.GenUniqueId()
 	}
-	c.Request.Header.Set(global.COMM_USER_ID, user_id)
+	c.Request.Header.Set(conf.COMM_USER_ID, user_id)
 	// extend session
-	if err := global.CacheUser(session_id, user_id); err != nil {
+	if err := CacheUser(session_id, user_id); err != nil {
 		return session_id, err
 	}
 	writeSession(c, session_id)

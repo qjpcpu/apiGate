@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/qjpcpu/apiGate/global"
+	"github.com/qjpcpu/apiGate/conf"
 	"github.com/qjpcpu/log"
 	"io"
 	"net"
@@ -15,9 +15,9 @@ func FinalHandler() gin.HandlerFunc {
 	// reuse transport object
 	commTransport := &http.Transport{
 		Dial: func(network, addr string) (net.Conn, error) {
-			return net.DialTimeout(network, addr, time.Duration(global.G.ConnTimeout)*time.Second)
+			return net.DialTimeout(network, addr, time.Duration(conf.Get().ConnTimeout)*time.Second)
 		},
-		ResponseHeaderTimeout: time.Duration(global.G.RequestTimeout) * time.Second,
+		ResponseHeaderTimeout: time.Duration(conf.Get().RequestTimeout) * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		DisableKeepAlives:     true,
 	}

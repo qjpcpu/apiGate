@@ -99,7 +99,7 @@ func FindUri(router *myrouter.Router, path string) (*myrouter.HostSetting, bool)
 	}
 }
 
-func (api API) ValidateAPI() error {
+func (api API) Validate() error {
 	var errmsg string
 	api.doValidate(&errmsg)
 	if errmsg != "" {

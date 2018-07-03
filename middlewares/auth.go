@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/qjpcpu/apiGate/global"
+	"github.com/qjpcpu/apiGate/conf"
 	"github.com/qjpcpu/log"
 	"net/http"
 )
@@ -18,7 +18,7 @@ func SessionFilter() gin.HandlerFunc {
 			return
 		}
 		// ADD CODE HERE: session/token验证
-		cookie, err = c.Request.Cookie(global.SESSION_ID)
+		cookie, err = c.Request.Cookie(conf.SESSION_ID)
 		if err != nil || cookie.Value == "" {
 			log.Info("no cookie or valid token found stop")
 			RenderThenAbort(c, http.StatusUnauthorized, makeResponse(ResStateUnauthorized, nil))
@@ -26,7 +26,7 @@ func SessionFilter() gin.HandlerFunc {
 		}
 		// Ok, user already login in
 		session_id = cookie.Value
-		user_id, err = global.FetchUser(session_id)
+		user_id, err = FetchUser(session_id)
 		if err != nil {
 			log.Infof("no cookie or valid token found:%v", err)
 			RenderThenAbort(c, http.StatusUnauthorized, makeResponse(ResStateUnauthorized, nil))

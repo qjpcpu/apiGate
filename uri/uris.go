@@ -1,8 +1,7 @@
-package global
+package uri
 
 import (
 	"fmt"
-	"github.com/qjpcpu/apiGate/embed"
 	"github.com/qjpcpu/apiGate/mod"
 	"github.com/qjpcpu/apiGate/myrouter"
 	"os"
@@ -79,7 +78,7 @@ func InitUri(api mod.API) {
 
 func initBuildinRouter() *myrouter.Router {
 	_buildin_uri_router := myrouter.New()
-	for name, path_info := range embed.Routers() {
+	for name, path_info := range Routers() {
 		_buildin_uri_router.HandlerFunc(mod.URI_METHOD, path_info, myrouter.HostSetting{
 			RouterPath:  path_info,
 			RouterName:  name,
@@ -110,7 +109,7 @@ func FindNormalUri(host, path string) (*myrouter.HostSetting, bool) {
 
 func FindBuildinUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
-	path = fmt.Sprintf("%s%s", embed.BUILDIN_PATH_PREFIX, path)
+	path = fmt.Sprintf("%s%s", BUILDIN_PATH_PREFIX, path)
 	return mod.FindUri(_buildin_uri_routers[rindex], path)
 }
 

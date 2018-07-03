@@ -34,7 +34,7 @@ func (config Configure) String() string {
 	)
 }
 
-func (config *Configure) AdjustConfiguration() error {
+func (config *Configure) SetDefaults() error {
 	if config.SessionExpireSeconds == 0 {
 		config.SessionExpireSeconds = 1800
 	}

@@ -1,4 +1,4 @@
-package embed
+package uri
 
 import (
 	"github.com/gin-gonic/gin"

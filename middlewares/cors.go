@@ -2,17 +2,17 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/qjpcpu/apiGate/global"
+	"github.com/qjpcpu/apiGate/conf"
 	"net/http"
 	"strings"
 )
 
 func CorsHandle() gin.HandlerFunc {
-	devMode := global.G.DevMode
+	devMode := conf.Get().DevMode
 	return func(c *gin.Context) {
 		from := c.Request.Header.Get("Origin")
 		if from != "" {
-			if strings.Contains(from, global.G.Domain) || devMode {
+			if strings.Contains(from, conf.Get().Domain) || devMode {
 				// ADD CODE HERE: 跨域处理
 				c.Writer.Header().Set("Access-Control-Allow-Origin", from)
 				c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")

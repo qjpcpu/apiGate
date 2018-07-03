@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/qjpcpu/apiGate/embed"
 	"github.com/qjpcpu/apiGate/myrouter"
+	"github.com/qjpcpu/apiGate/uri"
 )
 
 // 是否访问的是middleware自有路由
@@ -18,6 +18,6 @@ func BuildinFilter() gin.HandlerFunc {
 		}
 		ps, _ := c.Get("ProxySetting")
 		setting, _ := ps.(*myrouter.HostSetting)
-		embed.Handle(c, setting.RouterName)
+		uri.Handle(c, setting.RouterName)
 	}
 }

@@ -4,8 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/qjpcpu/apiGate/global"
+	"github.com/qjpcpu/apiGate/conf"
 	ms "github.com/qjpcpu/apiGate/middlewares"
+	"github.com/qjpcpu/apiGate/uri"
 	"os"
 )
 
@@ -14,6 +15,10 @@ var (
 	g_Version   string
 	g_BuildDate string
 	g_CommitID  string
+)
+
+var (
+	g_config_file string
 )
 
 func startServer() {
@@ -39,7 +44,7 @@ func startServer() {
 	ginengine.PATCH("/*uri", ms.FinalHandler())
 	ginengine.OPTIONS("/*uri", ms.FinalHandler())
 
-	err := ginengine.Run(global.G.ListenAddr)
+	err := ginengine.Run(conf.Get().ListenAddr)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -48,7 +53,7 @@ func startServer() {
 }
 
 func parseArgs() {
-	flag.StringVar(&global.G_conf_file, "c", "", "-c config file name")
+	flag.StringVar(&g_config_file, "c", "", "-c config file name")
 	var showVersion bool
 	flag.BoolVar(&showVersion, "v", false, "-v")
 	flag.Parse()
@@ -60,9 +65,9 @@ func parseArgs() {
 
 func main() {
 	parseArgs()
-	global.InitConfig()
-	global.InitCache()
-	global.InitDependService()
-	global.InitUri(global.G.API)
+	conf.InitConfig(g_config_file)
+	conf.InitCache()
+	conf.InitIDGenerator(conf.Cache())
+	uri.InitUri(conf.Get().API)
 	startServer()
 }
