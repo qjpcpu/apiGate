@@ -19,8 +19,6 @@ var (
 	freq_ctrl_routers [2]*myrouter.Router
 )
 
-const OrigPrefix = "_"
-
 func calcRouterIndex() int32 {
 	return _routerIndex % 2
 }
@@ -32,7 +30,7 @@ func InitUri(api API) {
 	_normal_uri_router := myrouter.New()
 	_freq_uri_router := myrouter.New()
 	for url, limit := range api.FreqCtrl {
-		p := "/" + OrigPrefix + url
+		p := FREQ_PATH_PREFIX + url
 		hs := myrouter.HostSetting{
 			RouterPath: p,
 			Data:       limit,
@@ -50,19 +48,19 @@ func InitUri(api API) {
 		for _, p := range group.White {
 			hs := group.Proxy.GenRouterSetting(p)
 			hs.Scheme = group.Proxy.Scheme()
-			p = "/" + OrigPrefix + p
+			p = OUTTER_PATH_PREFIX + p
 			_white_uri_router.HandlerFunc(URI_METHOD, p, hs)
 		}
 		for _, p := range group.Black {
 			hs := group.Proxy.GenRouterSetting(p)
 			hs.Scheme = group.Proxy.Scheme()
-			p = "/" + OrigPrefix + p
+			p = OUTTER_PATH_PREFIX + p
 			_black_uri_router.HandlerFunc(URI_METHOD, p, hs)
 		}
 		for _, p := range group.Normal {
 			hs := group.Proxy.GenRouterSetting(p)
 			hs.Scheme = group.Proxy.Scheme()
-			p = "/" + OrigPrefix + p
+			p = OUTTER_PATH_PREFIX + p
 			_normal_uri_router.HandlerFunc(URI_METHOD, p, hs)
 		}
 	}
@@ -90,19 +88,19 @@ func initBuildinRouter() *myrouter.Router {
 
 func FindBlackUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
-	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
+	path = fmt.Sprintf("%s%s", OUTTER_PATH_PREFIX, path)
 	return FindUri(_black_uri_routers[rindex], path)
 }
 
 func FindWhiteUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
-	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
+	path = fmt.Sprintf("%s%s", OUTTER_PATH_PREFIX, path)
 	return FindUri(_white_uri_routers[rindex], path)
 }
 
 func FindNormalUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
-	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
+	path = fmt.Sprintf("%s%s", OUTTER_PATH_PREFIX, path)
 	return FindUri(_normal_uri_routers[rindex], path)
 }
 
@@ -114,6 +112,6 @@ func FindBuildinUri(host, path string) (*myrouter.HostSetting, bool) {
 
 func FindFreqUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
-	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
+	path = fmt.Sprintf("%s%s", FREQ_PATH_PREFIX, path)
 	return FindUri(freq_ctrl_routers[rindex], path)
 }

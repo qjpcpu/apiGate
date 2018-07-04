@@ -2,12 +2,13 @@ package uri
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/qjpcpu/log"
 	"net/http"
 )
 
 const (
 	BUILDIN_PATH_PREFIX = "/_b"
+	OUTTER_PATH_PREFIX  = "/_o"
+	FREQ_PATH_PREFIX    = "/_f"
 )
 
 type RouterDef struct {
@@ -39,13 +40,10 @@ func SetRouter(uri string, handler gin.HandlerFunc) {
 }
 
 func Handle(c *gin.Context, name string) {
-	log.Infof("enter %s handler", c.Request.URL.Path)
 	if h, ok := routers[name]; ok && h.Handler != nil {
 		h.Handler(c)
 		c.Abort()
-		log.Infof("leave %s handler", c.Request.URL.Path)
 	} else {
-		log.Errorf("leave %s handler,shouldn't come here.", c.Request.URL.Path)
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 }

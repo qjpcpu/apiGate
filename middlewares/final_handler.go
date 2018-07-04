@@ -37,7 +37,7 @@ func FinalHandler() gin.HandlerFunc {
 		outreq.ProtoMinor = 1
 		outreq.Close = true
 		// for debug
-		log.Infof("reserve proxy:%s %s => %s user_id:%v", c.Request.Method, oldPath, outreq.URL.String(), getUserId(c))
+		log.Infof("%s %s => %s user_id:%v", c.Request.Method, oldPath, outreq.URL.String(), getUserId(c))
 
 		reqStart := time.Now()
 		resp, err := commTransport.RoundTrip(outreq)

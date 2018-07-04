@@ -64,10 +64,12 @@ func parseArgs() {
 }
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	parseArgs()
 	conf.InitConfig(g_config_file)
 	conf.InitCache()
 	conf.InitIDGenerator(conf.Cache())
 	uri.InitUri(conf.Get().API)
+	fmt.Print(conf.Get().String())
 	startServer()
 }

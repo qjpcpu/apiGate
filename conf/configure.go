@@ -34,9 +34,70 @@ type Configure struct {
 }
 
 func (config Configure) String() string {
-	return fmt.Sprintln(
-		fmt.Sprintf("[ListenAddr:%s]", config.ListenAddr),
-		fmt.Sprintf("[LogDir:%s][LogFile:%s]", config.LogDir, config.LogFile),
+	return fmt.Sprintf(`监听端口:  %s
+开发模式:  %s
+日志目录:  %s
+跨域允许:  %s
+频控窗口:  %s
+频控API:
+%s
+内置API:
+%s
+外部API列表:
+%s
+`,
+		config.ListenAddr,
+		func() string {
+			if config.DevMode {
+				return "是"
+			} else {
+				return "否"
+			}
+		}(),
+		filepath.Join(config.LogDir, config.LogFile),
+		config.Domain,
+		func() string {
+			if config.FreqCtrlDuration >= 30 {
+				return fmt.Sprintf("%vs", config.FreqCtrlDuration)
+			} else {
+				return fmt.Sprintf("%vs(无效,必须大于等于30s)", config.FreqCtrlDuration)
+			}
+		}(),
+		func() string {
+			if len(config.API.FreqCtrl) == 0 || config.FreqCtrlDuration < 30 {
+				return "(无)"
+			}
+			var str string
+			for k, c := range config.API.FreqCtrl {
+				str += fmt.Sprintf("%s  每%v秒%d次\n", k, config.FreqCtrlDuration, c)
+			}
+			return str
+		}(),
+		func() string {
+			if len(uri.Routers()) == 0 {
+				return "(无)"
+			}
+			var str string
+			for p := range uri.Routers() {
+				str += p + "\n"
+			}
+			return str
+		}(),
+		func() string {
+			var str string
+			for _, api := range config.API.Paths {
+				for _, u := range api.Normal {
+					str += fmt.Sprintf("* %s  -->  %s\n", u, api.Proxy.Host)
+				}
+				for _, u := range api.White {
+					str += fmt.Sprintf("o %s  -->  %s\n", u, api.Proxy.Host)
+				}
+				for _, u := range api.Black {
+					str += fmt.Sprintf("x %s  -->  %s\n", u, api.Proxy.Host)
+				}
+			}
+			return str
+		}(),
 	)
 }
 
@@ -45,11 +106,11 @@ func (config *Configure) SetDefaults() error {
 		config.SessionExpireSeconds = 1800
 	}
 
-	if config.FreqCtrlDuration < 30 {
+	if config.FreqCtrlDuration == 0 {
 		config.FreqCtrlDuration = 30
 	}
 	if config.ConnTimeout == 0 {
-		config.ConnTimeout = 1
+		config.ConnTimeout = 3
 	}
 	if config.RequestTimeout == 0 {
 		config.RequestTimeout = 10
@@ -87,7 +148,6 @@ func LoadConfig(config_filename string, config *Configure) error {
 	if config_filename == "" {
 		return fmt.Errorf("no config file")
 	}
-	fmt.Println("load config from file: ", config_filename)
 	file, err := os.Open(config_filename)
 	if err != nil {
 		fmt.Printf("load config from file %s error:%v\n", config_filename, err)
@@ -120,10 +180,11 @@ func InitConfig(config_filename string) {
 		fmt.Fprintf(os.Stderr, "parse config failed![Err:%s]\n", err.Error())
 		os.Exit(1)
 	}
-	log.InitLog(log.LogOption{LogFile: filepath.Join(confObj.LogDir, confObj.LogFile), Level: log.ParseLogLevel(confObj.LogLevel)})
-	d, _ := json.Marshal(confObj)
+	log.InitLog(log.LogOption{
+		LogFile: filepath.Join(confObj.LogDir, confObj.LogFile),
+		Level:   log.ParseLogLevel(confObj.LogLevel),
+	})
 	if confObj.DevMode {
 		fmt.Println("===============APIGate运行在开发模式下!!!=================")
 	}
-	fmt.Printf("config:\n%v\n", string(d))
 }

@@ -13,12 +13,15 @@ func FreqChecker() gin.HandlerFunc {
 		userId := c.Request.Header.Get(conf.COMM_USER_ID)
 		hs, needCtrl := uri.FindFreqUri(c.Request.Host, c.Request.URL.Path)
 		if !needCtrl || hs == nil || hs.RouterPath == "" {
-			log.Debugf("not found freq control for %s", c.Request.URL.Path)
+			log.Debugf("no freq control for %s", c.Request.URL.Path)
 			return
 		}
 		limit := hs.Data.(int64)
 		if limit < 1 {
 			return
+		}
+		if userId == "" {
+			userId = c.ClientIP()
 		}
 		if userId == "" {
 			return

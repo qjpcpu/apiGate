@@ -1,10 +1,10 @@
 package conf
 
 import (
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/qjpcpu/apiGate/mod"
 	"github.com/qjpcpu/apiGate/unique-id"
-	"github.com/qjpcpu/log"
 	"os"
 	"time"
 )
@@ -28,7 +28,7 @@ return serv_id
 	idWorkerNum := 5
 	seed, err := redis.Int(script.Do(conn, "apigate_id_seed", idWorkerNum))
 	if err != nil {
-		log.Errorf("conn to redis failed:%v", err)
+		fmt.Printf("conn to redis failed:%v\n", err)
 		os.Exit(1)
 	}
 	uid.InitGenerator(seed-idWorkerNum, idWorkerNum)

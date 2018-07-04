@@ -51,7 +51,7 @@ end
 data['last'] = timestamp
 redis.call("HSET",key,field,cjson.encode(data))
 redis.call("EXPIRE",key,time_window/1000)
-return threshold - data['t'] - data['of']
+return tostring(threshold - data['t'] - data['of'])
 `)
 
 type FreqController struct {
@@ -75,11 +75,11 @@ func (fc *FreqController) Tick(user, rule string) float64 {
 	}
 	conn := fc.pool.Get()
 	defer conn.Close()
-	fcnt, err := redis.Int64(tickScript.Do(conn, fc.key(user), rule, fc.threshold, fc.window, time.Now().Unix(), 1))
+	fcnt, err := redis.Float64(tickScript.Do(conn, fc.key(user), rule, fc.threshold, fc.window, time.Now().Unix(), 1))
 	if err != nil {
 		return 0
 	}
-	return float64(fcnt) / float64(fc.threshold)
+	return fcnt / float64(fc.threshold)
 }
 
 // Check频控次数,返回频控当前水位[0,1.0], >1表示超过阈值
@@ -89,11 +89,11 @@ func (fc *FreqController) Check(user, rule string) float64 {
 	}
 	conn := fc.pool.Get()
 	defer conn.Close()
-	fcnt, err := redis.Int64(tickScript.Do(conn, fc.key(user), rule, fc.threshold, fc.window, time.Now().Unix(), 0))
+	fcnt, err := redis.Float64(tickScript.Do(conn, fc.key(user), rule, fc.threshold, fc.window, time.Now().Unix(), 0))
 	if err != nil {
 		return 0
 	}
-	return float64(fcnt) / float64(fc.threshold)
+	return fcnt / float64(fc.threshold)
 }
 
 func (fc *FreqController) key(k string) string {

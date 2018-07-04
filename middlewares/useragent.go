@@ -8,6 +8,6 @@ import (
 func AgentFilter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// ADD CODE HERE: useragent处理
-		log.Debugf("parse user_agent[%s]", c.Request.UserAgent())
+		log.Debugf("user_agent[%s]", c.Request.UserAgent())
 	}
 }
