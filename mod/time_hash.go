@@ -14,7 +14,7 @@ import (
  comm.exp: 过期unix时间戳
 */
 const (
-	CacheEngineKey = "wm:cache-engine"
+	CacheEngineKey = "apigate:cache-engine"
 )
 
 var ErrNoCache = errors.New("No such data")

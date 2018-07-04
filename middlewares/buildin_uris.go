@@ -16,7 +16,7 @@ func BuildinFilter() gin.HandlerFunc {
 		if exists, ok := ib.(bool); !ok || !exists {
 			return
 		}
-		ps, _ := c.Get("ProxySetting")
+		ps, _ := c.Get(gin_context_proxysetting)
 		setting, _ := ps.(*myrouter.HostSetting)
 		uri.Handle(c, setting.RouterName)
 	}

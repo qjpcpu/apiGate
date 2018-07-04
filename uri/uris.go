@@ -2,7 +2,6 @@ package uri
 
 import (
 	"fmt"
-	"github.com/qjpcpu/apiGate/mod"
 	"github.com/qjpcpu/apiGate/myrouter"
 	"os"
 	"sync"
@@ -26,7 +25,7 @@ func calcRouterIndex() int32 {
 	return _routerIndex % 2
 }
 
-func InitUri(api mod.API) {
+func InitUri(api API) {
 	rindex := (_routerIndex + 1) % 2
 	_black_uri_router := myrouter.New()
 	_white_uri_router := myrouter.New()
@@ -41,7 +40,7 @@ func InitUri(api mod.API) {
 				return url
 			},
 		}
-		_freq_uri_router.HandlerFunc(mod.URI_METHOD, p, hs)
+		_freq_uri_router.HandlerFunc(URI_METHOD, p, hs)
 	}
 	for _, group := range api.Paths {
 		if len(group.Proxy.Host) == 0 {
@@ -52,19 +51,19 @@ func InitUri(api mod.API) {
 			hs := group.Proxy.GenRouterSetting(p)
 			hs.Scheme = group.Proxy.Scheme()
 			p = "/" + OrigPrefix + p
-			_white_uri_router.HandlerFunc(mod.URI_METHOD, p, hs)
+			_white_uri_router.HandlerFunc(URI_METHOD, p, hs)
 		}
 		for _, p := range group.Black {
 			hs := group.Proxy.GenRouterSetting(p)
 			hs.Scheme = group.Proxy.Scheme()
 			p = "/" + OrigPrefix + p
-			_black_uri_router.HandlerFunc(mod.URI_METHOD, p, hs)
+			_black_uri_router.HandlerFunc(URI_METHOD, p, hs)
 		}
 		for _, p := range group.Normal {
 			hs := group.Proxy.GenRouterSetting(p)
 			hs.Scheme = group.Proxy.Scheme()
 			p = "/" + OrigPrefix + p
-			_normal_uri_router.HandlerFunc(mod.URI_METHOD, p, hs)
+			_normal_uri_router.HandlerFunc(URI_METHOD, p, hs)
 		}
 	}
 	_buildin_uri_router := initBuildinRouter()
@@ -79,7 +78,7 @@ func InitUri(api mod.API) {
 func initBuildinRouter() *myrouter.Router {
 	_buildin_uri_router := myrouter.New()
 	for name, path_info := range Routers() {
-		_buildin_uri_router.HandlerFunc(mod.URI_METHOD, path_info, myrouter.HostSetting{
+		_buildin_uri_router.HandlerFunc(URI_METHOD, path_info, myrouter.HostSetting{
 			RouterPath:  path_info,
 			RouterName:  name,
 			PathRewrite: myrouter.DefaultPathRewrite,
@@ -92,29 +91,29 @@ func initBuildinRouter() *myrouter.Router {
 func FindBlackUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
 	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
-	return mod.FindUri(_black_uri_routers[rindex], path)
+	return FindUri(_black_uri_routers[rindex], path)
 }
 
 func FindWhiteUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
 	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
-	return mod.FindUri(_white_uri_routers[rindex], path)
+	return FindUri(_white_uri_routers[rindex], path)
 }
 
 func FindNormalUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
 	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
-	return mod.FindUri(_normal_uri_routers[rindex], path)
+	return FindUri(_normal_uri_routers[rindex], path)
 }
 
 func FindBuildinUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
 	path = fmt.Sprintf("%s%s", BUILDIN_PATH_PREFIX, path)
-	return mod.FindUri(_buildin_uri_routers[rindex], path)
+	return FindUri(_buildin_uri_routers[rindex], path)
 }
 
 func FindFreqUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
 	path = fmt.Sprintf("/%s%s", OrigPrefix, path)
-	return mod.FindUri(freq_ctrl_routers[rindex], path)
+	return FindUri(freq_ctrl_routers[rindex], path)
 }

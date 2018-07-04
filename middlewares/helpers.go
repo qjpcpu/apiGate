@@ -12,9 +12,14 @@ import (
 	"net/http"
 )
 
+const (
+	gin_context_user_id      = "UserId"
+	gin_context_proxysetting = "ProxySetting"
+)
+
 // 从gin context读取user id
 func getUserId(c *gin.Context) string {
-	iuid, ok := c.Get("UserId")
+	iuid, ok := c.Get(gin_context_user_id)
 	if !ok {
 		return ""
 	}
@@ -27,7 +32,7 @@ func getUserId(c *gin.Context) string {
 
 // 注意使用时proxysetting必须已被设置
 func getProxySetting(c *gin.Context) (*myrouter.HostSetting, error) {
-	ps, ok := c.Get("ProxySetting")
+	ps, ok := c.Get(gin_context_proxysetting)
 	if !ok {
 		return nil, errors.New("host setting not found")
 	}
@@ -113,7 +118,7 @@ func writeUserServerSessionInfo(c *gin.Context, user_id string, session_ids ...s
 		return session_id, err
 	}
 	writeSession(c, session_id)
-	c.Set("UserId", user_id)
+	c.Set(gin_context_user_id, user_id)
 	return session_id, nil
 }
 

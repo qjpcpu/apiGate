@@ -23,7 +23,7 @@ func UriCheck() gin.HandlerFunc {
 		if is_buildin_uri {
 			log.Debugf("is_buildin_uri:%v", c.Request.URL.Path)
 			c.Set("IsBuildinUri", is_buildin_uri)
-			c.Set("ProxySetting", hs)
+			c.Set(gin_context_proxysetting, hs)
 			return
 		}
 		hs, is_white_uri := uri.FindWhiteUri(c.Request.Host, c.Request.URL.Path)
@@ -35,7 +35,7 @@ func UriCheck() gin.HandlerFunc {
 			if hs.Scheme == "" {
 				hs.Scheme = "http"
 			}
-			c.Set("ProxySetting", hs)
+			c.Set(gin_context_proxysetting, hs)
 			log.Debugf("is_white_uri:%v", c.Request.URL.Path)
 			return
 		}
@@ -47,7 +47,7 @@ func UriCheck() gin.HandlerFunc {
 			if hs.Scheme == "" {
 				hs.Scheme = "http"
 			}
-			c.Set("ProxySetting", hs)
+			c.Set(gin_context_proxysetting, hs)
 			log.Debugf("is_normal_uri:%v", c.Request.URL.Path)
 			return
 		}

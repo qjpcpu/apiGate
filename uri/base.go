@@ -1,19 +1,9 @@
-package mod
+package uri
 
 import (
 	"fmt"
 	"github.com/qjpcpu/apiGate/myrouter"
 	"strings"
-	"sync"
-)
-
-var (
-	RouterMutex          *sync.Mutex = &sync.Mutex{}
-	_routerIndex         int32       = 0
-	_black_uri_routers   [2]*myrouter.Router
-	_white_uri_routers   [2]*myrouter.Router
-	_normal_uri_routers  [2]*myrouter.Router
-	_buildin_uri_routers [2]*myrouter.Router
 )
 
 const URI_METHOD = "POST"
