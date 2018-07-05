@@ -10,8 +10,9 @@ const (
 )
 
 var (
-	g_conf  *Configure = &Configure{}
-	g_cache *redis.Pool
+	g_conf     *Configure = &Configure{}
+	g_cache    *redis.Pool
+	g_dev_mode bool = false
 )
 
 func Get() *Configure {
@@ -20,4 +21,12 @@ func Get() *Configure {
 
 func Cache() *redis.Pool {
 	return g_cache
+}
+
+func SetMode(isdev bool) {
+	g_dev_mode = isdev
+}
+
+func IsDevMode() bool {
+	return g_dev_mode
 }

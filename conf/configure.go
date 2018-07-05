@@ -17,7 +17,6 @@ type Configure struct {
 	RedisConfig *CacheConfig `json:"redis_config" yaml:"redis_config"`
 	LogDir      string       `json:"log_dir" yaml:"log_dir"`
 	LogFile     string       `json:"log_file" yaml:"log_file"`
-	LogLevel    string       `json:"log_lvl" yaml:"log_lvl"`
 
 	ConnTimeout    int64 `json:"conn_timeout" yaml:"conn_timeout"`       // in second
 	RequestTimeout int64 `json:"request_timeout" yaml:"request_timeout"` // in second
@@ -26,9 +25,6 @@ type Configure struct {
 
 	API                  uri.API `json:"api_list" yaml:"api_list"`
 	SessionExpireSeconds int     `json:"session_max_age" yaml:"session_max_age"`
-
-	// 开发模式下允许跨域,正式环境禁止配置
-	DevMode bool `json:"dev_mode" yaml:"dev_mode"`
 
 	Domain string `json:"domain" yaml:"domain"` // eg: .baidu.com
 }
@@ -48,7 +44,7 @@ func (config Configure) String() string {
 `,
 		config.ListenAddr,
 		func() string {
-			if config.DevMode {
+			if IsDevMode() {
 				return "是"
 			} else {
 				return "否"
@@ -180,11 +176,17 @@ func InitConfig(config_filename string) {
 		fmt.Fprintf(os.Stderr, "parse config failed![Err:%s]\n", err.Error())
 		os.Exit(1)
 	}
+	var lvl log.Level
+	if IsDevMode() {
+		lvl = log.DEBUG
+	} else {
+		lvl = log.INFO
+	}
 	log.InitLog(log.LogOption{
 		LogFile: filepath.Join(confObj.LogDir, confObj.LogFile),
-		Level:   log.ParseLogLevel(confObj.LogLevel),
+		Level:   lvl,
 	})
-	if confObj.DevMode {
-		fmt.Println("===============APIGate运行在开发模式下!!!=================")
+	if IsDevMode() {
+		fmt.Println("===============APIGate运行在开发模式下!=================")
 	}
 }

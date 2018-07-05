@@ -53,10 +53,13 @@ func startServer() {
 }
 
 func parseArgs() {
+	var dev_mode bool
 	flag.StringVar(&g_config_file, "c", "", "-c config file name")
+	flag.BoolVar(&dev_mode, "dev", false, "dev mode")
 	var showVersion bool
 	flag.BoolVar(&showVersion, "v", false, "-v")
 	flag.Parse()
+	conf.SetMode(dev_mode)
 	if showVersion {
 		fmt.Printf("版本号: %s\n编译时间: %s\nCommitID: %s\n", g_Version, g_BuildDate, g_CommitID)
 		os.Exit(0)
@@ -64,8 +67,10 @@ func parseArgs() {
 }
 
 func main() {
-	gin.SetMode(gin.ReleaseMode)
 	parseArgs()
+	if !conf.IsDevMode() {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	conf.InitConfig(g_config_file)
 	conf.InitCache()
 	conf.InitIDGenerator(conf.Cache())

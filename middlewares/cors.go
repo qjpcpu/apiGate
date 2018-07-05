@@ -8,13 +8,12 @@ import (
 )
 
 func CorsHandle() gin.HandlerFunc {
-	devMode := conf.Get().DevMode
+	domain := strings.TrimSuffix(conf.Get().Domain, "/")
 	return func(c *gin.Context) {
 		from := c.Request.Header.Get("Origin")
-		if devMode || strings.Contains(from, conf.Get().Domain) {
+		if conf.IsDevMode() || strings.HasSuffix(from, domain) {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", from)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-
 			c.Writer.Header().Set("Access-Control-Allow-Headers", c.Request.Header.Get("Access-Control-Request-Headers"))
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT,PATCH")
 		}
