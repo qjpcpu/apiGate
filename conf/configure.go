@@ -200,6 +200,7 @@ func InitConfig(config_filename string) {
 		}
 	} else {
 		// use simplest config
+		port := ":6070"
 		*confObj = Configure{
 			ListenAddr: ":8080",
 			RedisConfig: &CacheConfig{
@@ -210,7 +211,7 @@ func InitConfig(config_filename string) {
 				{
 					White: []string{"/*any"},
 					Proxy: &uri.APIProxy{
-						Host: "localhost:6000",
+						Host: "localhost" + port,
 					},
 				},
 			}},
@@ -223,6 +224,7 @@ func InitConfig(config_filename string) {
 		} else {
 			fmt.Printf("no config file found by flag [-c], use simplest config:\n%s\n", string(data))
 		}
+		go startEchoServer(port)
 	}
 	if err = confObj.SetDefaults(); err != nil {
 		fmt.Fprintf(os.Stderr, "parse config failed![Err:%s]\n", err.Error())
