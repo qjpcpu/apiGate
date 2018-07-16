@@ -1,8 +1,10 @@
 package conf
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
+	"strings"
 )
 
 func startEchoServer(port string) {
@@ -12,7 +14,13 @@ func startEchoServer(port string) {
 		if c.Request.Body != nil {
 			data, _ := ioutil.ReadAll(c.Request.Body)
 			defer c.Request.Body.Close()
-			payload = string(data)
+			ct := c.Request.Header.Get("content-type")
+			if strings.Contains(ct, "json") {
+				payload = make(map[string]interface{})
+				json.Unmarshal(data, &payload)
+			} else {
+				payload = string(data)
+			}
 		}
 		qs := make(map[string]string)
 		for k := range c.Request.URL.Query() {
