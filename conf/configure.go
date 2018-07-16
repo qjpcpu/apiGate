@@ -12,21 +12,21 @@ import (
 )
 
 type Configure struct {
-	ListenAddr string `json:"listen_addr" yaml:"listen_addr"`
+	ListenAddr string `json:"listen_addr,omitempty" yaml:"listen_addr"`
 
-	RedisConfig *CacheConfig `json:"redis_config" yaml:"redis_config"`
-	LogDir      string       `json:"log_dir" yaml:"log_dir"`
-	LogFile     string       `json:"log_file" yaml:"log_file"`
+	RedisConfig *CacheConfig `json:"redis_config,omitempty" yaml:"redis_config"`
+	LogDir      string       `json:"log_dir,omitempty" yaml:"log_dir"`
+	LogFile     string       `json:"log_file,omitempty" yaml:"log_file"`
 
-	ConnTimeout    int64 `json:"conn_timeout" yaml:"conn_timeout"`       // in second
-	RequestTimeout int64 `json:"request_timeout" yaml:"request_timeout"` // in second
+	ConnTimeout    int64 `json:"conn_timeout,omitempty" yaml:"conn_timeout"`       // in second
+	RequestTimeout int64 `json:"request_timeout,omitempty" yaml:"request_timeout"` // in second
 
-	FreqCtrlDuration int64 `json:"freq_ctrl_duration" yaml:"freq_ctrl_duration"` // 频控窗口,最小30秒
+	FreqCtrlDuration int64 `json:"freq_ctrl_duration,omitempty" yaml:"freq_ctrl_duration"` // 频控窗口,最小30秒
 
 	API                  uri.API `json:"api_list" yaml:"api_list"`
-	SessionExpireSeconds int     `json:"session_max_age" yaml:"session_max_age"`
+	SessionExpireSeconds int     `json:"session_max_age,omitempty" yaml:"session_max_age"`
 
-	Domain string `json:"domain" yaml:"domain"` // eg: .baidu.com
+	Domain string `json:"domain,omitempty" yaml:"domain"` // eg: .baidu.com
 }
 
 func (config Configure) String() string {
@@ -51,7 +51,13 @@ func (config Configure) String() string {
 			}
 		}(),
 		filepath.Join(config.LogDir, config.LogFile),
-		config.Domain,
+		func() string {
+			if IsDevMode() || config.Domain == "" {
+				return "*"
+			} else {
+				return config.Domain
+			}
+		}(),
 		func() string {
 			if config.FreqCtrlDuration >= 30 {
 				return fmt.Sprintf("%vs", config.FreqCtrlDuration)
@@ -98,6 +104,14 @@ func (config Configure) String() string {
 }
 
 func (config *Configure) SetDefaults() error {
+	if config.ListenAddr == "" {
+		config.ListenAddr = ":8080"
+	}
+	if config.RedisConfig == nil {
+		config.RedisConfig = &CacheConfig{}
+	}
+	config.RedisConfig.setDefault()
+
 	if config.SessionExpireSeconds == 0 {
 		config.SessionExpireSeconds = 1800
 	}
@@ -112,10 +126,10 @@ func (config *Configure) SetDefaults() error {
 		config.RequestTimeout = 10
 	}
 	if config.LogDir == "" {
-		config.LogDir = "./apilogs"
+		config.LogDir = "./log"
 	}
 	if config.LogFile == "" {
-		config.LogFile = "api-gate.log"
+		config.LogFile = "api.log"
 	}
 	api := config.API
 	if len(api.Paths) == 0 {
@@ -166,11 +180,39 @@ func LoadConfig(config_filename string, config *Configure) error {
 }
 
 func InitConfig(config_filename string) {
+	var err error
 	confObj := Get()
-	err := LoadConfig(config_filename, confObj)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "load config failed![Err:%s]\n", err.Error())
-		os.Exit(1)
+	if config_filename != "" {
+		err = LoadConfig(config_filename, confObj)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "load config failed![Err:%s]\n", err.Error())
+			os.Exit(1)
+		}
+	} else {
+		// use simplest config
+		*confObj = Configure{
+			ListenAddr: ":8080",
+			RedisConfig: &CacheConfig{
+				RedisAddress: "localhost:6379",
+			},
+			LogDir: "./log",
+			API: uri.API{Paths: []uri.APIPath{
+				{
+					White: []string{"/*any"},
+					Proxy: &uri.APIProxy{
+						Host: "localhost:6000",
+					},
+				},
+			}},
+		}
+		data, _ := json.MarshalIndent(confObj, "", "    ")
+		fn := "./simplest.conf"
+		if _, err = os.Stat(fn); os.IsNotExist(err) {
+			ioutil.WriteFile(fn, data, 0644)
+			fmt.Printf("no config file found by flag [-c], use simplest config %s:\n%s\n", fn, string(data))
+		} else {
+			fmt.Printf("no config file found by flag [-c], use simplest config:\n%s\n", string(data))
+		}
 	}
 	if err = confObj.SetDefaults(); err != nil {
 		fmt.Fprintf(os.Stderr, "parse config failed![Err:%s]\n", err.Error())

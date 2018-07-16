@@ -22,12 +22,12 @@ type FreqCtrl map[string]int64
 
 type API struct {
 	Paths    []APIPath `json:"paths" yaml:"paths"`
-	FreqCtrl FreqCtrl  `json:"freq" yaml:"freq"`
+	FreqCtrl FreqCtrl  `json:"freq,omitempty" yaml:"freq"`
 }
 
 type APIProxy struct {
 	Host   string `json:"host" yaml:"host"`
-	Prefix string `json:"trim" yaml:"trim"`
+	Prefix string `json:"trim,omitempty" yaml:"trim"`
 }
 
 func (ap *APIProxy) Scheme() string {

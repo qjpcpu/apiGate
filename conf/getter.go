@@ -10,7 +10,7 @@ const (
 )
 
 var (
-	g_conf     *Configure = &Configure{}
+	g_conf     *Configure = &Configure{RedisConfig: &CacheConfig{}}
 	g_cache    *redis.Pool
 	g_dev_mode bool = false
 )

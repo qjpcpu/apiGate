@@ -40,17 +40,17 @@ func GetFreqCtrl(threshold, window int64) *mod.FreqController {
 }
 
 type CacheConfig struct {
-	RedisNetwork        string `json:"network" yaml:"network"`
-	RedisAddress        string `json:"addr" yaml:"addr"`
-	RedisPassword       string `json:"password" yaml:"password"`
-	RedisConnectTimeout int    `json:"conn_timeout" yaml:"conn_timeout"`
-	RedisReadTimeout    int    `json:"read_timeout" yaml:"read_timeout"`
-	RedisWriteTimeout   int    `json:"write_timeout" yaml:"write_timeout"`
-	RedisMaxActive      int    `json:"max_active" yaml:"max_active"`
-	RedisMaxIdle        int    `json:"max_idle" yaml:"max_idle"`
-	RedisIdleTimeout    int    `json:"idle_timeout" yaml:"idle_timeout"`
-	RedisWait           bool   `json:"wait" yaml:"wait"`
-	RedisDb             string `json:"db_num" yaml:"db_num"`
+	RedisNetwork        string `json:"network,omitempty" yaml:"network"`
+	RedisAddress        string `json:"addr,omitempty" yaml:"addr"`
+	RedisPassword       string `json:"password,omitempty" yaml:"password"`
+	RedisConnectTimeout int    `json:"conn_timeout,omitempty" yaml:"conn_timeout"`
+	RedisReadTimeout    int    `json:"read_timeout,omitempty" yaml:"read_timeout"`
+	RedisWriteTimeout   int    `json:"write_timeout,omitempty" yaml:"write_timeout"`
+	RedisMaxActive      int    `json:"max_active,omitempty" yaml:"max_active"`
+	RedisMaxIdle        int    `json:"max_idle,omitempty" yaml:"max_idle"`
+	RedisIdleTimeout    int    `json:"idle_timeout,omitempty" yaml:"idle_timeout"`
+	RedisWait           bool   `json:"wait,omitempty" yaml:"wait"`
+	RedisDb             string `json:"db_num,omitempty" yaml:"db_num"`
 }
 
 func (conf *CacheConfig) NewRedisPool() *redis.Pool {
@@ -97,6 +97,9 @@ func (conf *CacheConfig) NewRedisPool() *redis.Pool {
 func (cc *CacheConfig) setDefault() {
 	if cc.RedisNetwork == "" {
 		cc.RedisNetwork = "tcp"
+	}
+	if cc.RedisDb == "" {
+		cc.RedisDb = "0"
 	}
 	if cc.RedisAddress == "" {
 		cc.RedisAddress = "127.0.0.1:6379"

@@ -10,3 +10,4 @@
 /.nfs*
 tools/y2j/y2j
 /upgrade.md
+/simplest.conf
