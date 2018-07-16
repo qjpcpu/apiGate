@@ -11,8 +11,14 @@ import (
 	"path/filepath"
 )
 
+type SSL struct {
+	CertFile string `json:"cert,omitempty" yaml:"cert"`
+	KeyFile  string `json:"key,omitempty" yaml:"key"`
+}
+
 type Configure struct {
 	ListenAddr string `json:"listen_addr,omitempty" yaml:"listen_addr"`
+	SSL        *SSL   `json:"ssl,omitempty" yaml:"ssl"`
 
 	RedisConfig *CacheConfig `json:"redis_config,omitempty" yaml:"redis_config"`
 	LogDir      string       `json:"log_dir,omitempty" yaml:"log_dir"`
@@ -101,6 +107,10 @@ func (config Configure) String() string {
 			return str
 		}(),
 	)
+}
+
+func (config *Configure) SSLEnabled() bool {
+	return config.SSL != nil && config.SSL.CertFile != "" && config.SSL.KeyFile != ""
 }
 
 func (config *Configure) SetDefaults() error {

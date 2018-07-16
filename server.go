@@ -44,7 +44,12 @@ func startServer() {
 	ginengine.PATCH("/*uri", ms.FinalHandler())
 	ginengine.OPTIONS("/*uri", ms.FinalHandler())
 
-	err := ginengine.Run(conf.Get().ListenAddr)
+	var err error
+	if confobj := conf.Get(); confobj.SSLEnabled() {
+		err = ginengine.RunTLS(confobj.ListenAddr, confobj.SSL.CertFile, confobj.SSL.KeyFile)
+	} else {
+		err = ginengine.Run(confobj.ListenAddr)
+	}
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
