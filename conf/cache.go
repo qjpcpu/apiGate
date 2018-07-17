@@ -3,8 +3,8 @@ package conf
 import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
-	"github.com/qjpcpu/apiGate/mod"
-	"github.com/qjpcpu/apiGate/unique-id"
+	"github.com/qjpcpu/common/freqctrl"
+	"github.com/qjpcpu/common/unique-id"
 	"os"
 	"time"
 )
@@ -34,8 +34,8 @@ return serv_id
 	uid.InitGenerator(seed-idWorkerNum, idWorkerNum)
 }
 
-func GetFreqCtrl(threshold, window int64) *mod.FreqController {
-	fc, _ := mod.NewFreqController(g_cache, threshold, window)
+func GetFreqCtrl(threshold, window int64) *freqctrl.FreqCtrl {
+	fc, _ := freqctrl.New(g_cache, "apigatefreqctrl", threshold, window)
 	return fc
 }
 

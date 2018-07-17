@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/qjpcpu/apiGate/conf"
 	"github.com/qjpcpu/apiGate/myrouter"
-	"github.com/qjpcpu/apiGate/unique-id"
+	"github.com/qjpcpu/common/unique-id"
 	"github.com/qjpcpu/log"
 	"io/ioutil"
 	"net/http"
