@@ -50,7 +50,7 @@ func FinalHandler() gin.HandlerFunc {
 		defer resp.Body.Close()
 
 		// log real request time
-		c.Set("backend_time", time.Now().Sub(reqStart))
+		log.Infof("%s cost time %vms", outreq.URL.String(), time.Now().Sub(reqStart).Nanoseconds()/1000000)
 
 		// catch http 401
 		if resp.StatusCode == http.StatusUnauthorized {
