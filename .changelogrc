@@ -1,9 +1,9 @@
 {
-    "app_name": "Webmiddleware",
-    "logo": "http://git.in.codoon.com/uploads/user/avatar/49/wolf.jpg",
-    "intro": "webmiddleware是咕咚web-js接口接入端",
+    "app_name": "APIGate",
+    "logo": "",
+    "intro": "接入端",
     "branch" : "master",
-    "repo_url": "http://git.in.codoon.com/backend/WebMiddleware",
+    "repo_url": "",
     "version_name" : "v1.0.0",
     "file": "CHANGELOG.md",
     "template": "myCustomTemplate.md",
