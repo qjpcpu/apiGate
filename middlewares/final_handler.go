@@ -29,6 +29,7 @@ func FinalHandler() gin.HandlerFunc {
 		*outreq = *(c.Request)
 		outreq.URL.Scheme = setting.Scheme
 		outreq.URL.Host = setting.Host
+		outreq.Host = setting.Host
 		oldPath := c.Request.URL.Path
 		newPath := setting.PathRewrite(c.Request.URL.Path)
 		outreq.URL.Path = newPath
