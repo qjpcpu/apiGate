@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"github.com/qjpcpu/apiGate/rr"
 	"github.com/qjpcpu/apiGate/uri"
 	"github.com/qjpcpu/log"
 	"io/ioutil"
@@ -247,8 +248,18 @@ func InitConfig(config_filename string) {
 				{
 					White: []string{"/example2/get"},
 					Proxy: &uri.APIProxy{
-						Host:   "http://httpbin.org",
+						Host:   "httpbin-cluster",
 						Prefix: "/example2",
+						Cluster: []rr.Server{
+							{
+								Host:   "http://httpbin.org",
+								Weight: 2,
+							},
+							{
+								Host:   "https://httpbin.org",
+								Weight: 1,
+							},
+						},
 					},
 				},
 			}},

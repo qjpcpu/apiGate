@@ -17,6 +17,7 @@ const (
 	ResStateLoginFailedExceed   = 505
 	ResStateCacheUserFaild      = 506
 	ResStateLoginFailedPassword = 507
+	ResStateInternalError       = 508
 	ResStateUnauthorized        = 5
 )
 
@@ -52,6 +53,8 @@ func (rs ResState) String() string {
 		return "您被禁止访问该资源"
 	case ResStateReqExceeded:
 		return "访问频率过高"
+	case ResStateInternalError:
+		return "内部错误"
 	}
 	return ""
 }

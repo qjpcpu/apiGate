@@ -3,6 +3,7 @@ package uri
 import (
 	"fmt"
 	"github.com/qjpcpu/apiGate/myrouter"
+	"github.com/qjpcpu/apiGate/rr"
 	"strings"
 )
 
@@ -26,8 +27,9 @@ type API struct {
 }
 
 type APIProxy struct {
-	Host   string `json:"host" yaml:"host" toml:"host"`
-	Prefix string `json:"trim,omitempty" yaml:"trim"  toml:"trim,omitempty"`
+	Host    string      `json:"host" yaml:"host" toml:"host"`
+	Prefix  string      `json:"trim,omitempty" yaml:"trim"  toml:"trim,omitempty"`
+	Cluster []rr.Server `json:"cluster,omitempty" yaml:"cluster,omitempty" toml:"cluster,omitempty"`
 }
 
 func (ap *APIProxy) Scheme() string {

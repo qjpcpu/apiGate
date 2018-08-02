@@ -3,6 +3,7 @@ package middlewares
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/qjpcpu/apiGate/conf"
+	"github.com/qjpcpu/apiGate/uri"
 	"github.com/qjpcpu/log"
 	"io"
 	"net"
@@ -24,12 +25,19 @@ func FinalHandler() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		setting, _ := getProxySetting(c)
+		cluster, ok := uri.GetCluster(setting.Host)
+		if !ok {
+			RenderThenAbort(c, http.StatusInternalServerError, makeResponse(ResStateInternalError, nil))
+			log.Error("内部配置错误,无%s集群配置", setting.Host)
+			return
+		}
+		pickedServer := cluster.Yield()
 		// Copy request
 		outreq := new(http.Request)
 		*outreq = *(c.Request)
-		outreq.URL.Scheme = setting.Scheme
-		outreq.URL.Host = setting.Host
-		outreq.Host = setting.Host
+		outreq.URL.Scheme = pickedServer.Scheme()
+		outreq.URL.Host = pickedServer.HostWithoutScheme()
+		outreq.Host = pickedServer.HostWithoutScheme()
 		oldPath := c.Request.URL.Path
 		newPath := setting.PathRewrite(c.Request.URL.Path)
 		outreq.URL.Path = newPath

@@ -3,6 +3,7 @@ package uri
 import (
 	"fmt"
 	"github.com/qjpcpu/apiGate/myrouter"
+	"github.com/qjpcpu/apiGate/rr"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -17,6 +18,8 @@ var (
 	_buildin_uri_routers [2]*myrouter.Router
 	// 频控
 	freq_ctrl_routers [2]*myrouter.Router
+	// load balance
+	services [2]rr.Services
 )
 
 func calcRouterIndex() int32 {
@@ -29,6 +32,7 @@ func InitUri(api API) {
 	_white_uri_router := myrouter.New()
 	_normal_uri_router := myrouter.New()
 	_freq_uri_router := myrouter.New()
+	_services := rr.NewServices()
 	for url, limit := range api.FreqCtrl {
 		p := FREQ_PATH_PREFIX + url
 		hs := myrouter.HostSetting{
@@ -45,6 +49,7 @@ func InitUri(api API) {
 			fmt.Println("Please set  proxy host")
 			os.Exit(1)
 		}
+		_services.AddCluster(group.Proxy.HostWithoutScheme(), group.Proxy.Cluster)
 		for _, p := range group.White {
 			hs := group.Proxy.GenRouterSetting(p)
 			hs.Scheme = group.Proxy.Scheme()
@@ -70,6 +75,7 @@ func InitUri(api API) {
 	_white_uri_routers[rindex] = _white_uri_router
 	_normal_uri_routers[rindex] = _normal_uri_router
 	freq_ctrl_routers[rindex] = _freq_uri_router
+	services[rindex] = _services
 	atomic.AddInt32(&_routerIndex, 1)
 }
 
@@ -114,4 +120,9 @@ func FindFreqUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
 	path = fmt.Sprintf("%s%s", FREQ_PATH_PREFIX, path)
 	return FindUri(freq_ctrl_routers[rindex], path)
+}
+
+func GetCluster(name string) (*rr.Cluster, bool) {
+	rindex := calcRouterIndex()
+	return services[rindex].GetCluster(name)
 }
