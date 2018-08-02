@@ -31,7 +31,7 @@ func FinalHandler() gin.HandlerFunc {
 			log.Error("内部配置错误,无%s集群配置", setting.Host)
 			return
 		}
-		pickedServer := cluster.Yield()
+		pickedServer := cluster.PickServer()
 		// Copy request
 		outreq := new(http.Request)
 		*outreq = *(c.Request)

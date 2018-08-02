@@ -37,7 +37,7 @@ func NewCluster(servers ...Server) *Cluster {
 	return cluster
 }
 
-func (cluster *Cluster) Yield() Server {
+func (cluster *Cluster) PickServer() Server {
 	i := atomic.AddInt32(&cluster.cursor, 1)
 	return cluster.servers[cluster.weights[int(i)%len(cluster.weights)]]
 }
