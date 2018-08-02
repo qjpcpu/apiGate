@@ -1,9 +1,12 @@
 package conf
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"github.com/qjpcpu/apiGate/uri"
 	"github.com/qjpcpu/log"
 	"io/ioutil"
@@ -12,27 +15,41 @@ import (
 )
 
 type SSL struct {
-	CertFile string `json:"cert,omitempty" yaml:"cert"`
-	KeyFile  string `json:"key,omitempty" yaml:"key"`
+	CertFile string `json:"cert,omitempty" yaml:"cert" toml:"cert,omitempty"`
+	KeyFile  string `json:"key,omitempty" yaml:"key" toml:"key,omitempty"`
 }
 
 type Configure struct {
-	ListenAddr string `json:"listen_addr,omitempty" yaml:"listen_addr"`
-	SSL        *SSL   `json:"ssl,omitempty" yaml:"ssl"`
+	ListenAddr string `json:"listen_addr,omitempty" yaml:"listen_addr" toml:"listen_addr,omitempty"`
+	SSL        *SSL   `json:"ssl,omitempty" yaml:"ssl" toml:"ssl,omitempty"`
 
-	RedisConfig *CacheConfig `json:"redis_config,omitempty" yaml:"redis_config"`
-	LogDir      string       `json:"log_dir,omitempty" yaml:"log_dir"`
-	LogFile     string       `json:"log_file,omitempty" yaml:"log_file"`
+	RedisConfig *CacheConfig `json:"redis_config,omitempty" yaml:"redis_config" toml:"redis_config,omitempty"`
+	LogDir      string       `json:"log_dir,omitempty" yaml:"log_dir" toml:"log_dir,omitempty"`
+	LogFile     string       `json:"log_file,omitempty" yaml:"log_file" toml:"log_file,omitempty"`
 
-	ConnTimeout    int64 `json:"conn_timeout,omitempty" yaml:"conn_timeout"`       // in second
-	RequestTimeout int64 `json:"request_timeout,omitempty" yaml:"request_timeout"` // in second
+	ConnTimeout    int64 `json:"conn_timeout,omitempty" yaml:"conn_timeout" toml:"conn_timeout,omitempty"`          // in second
+	RequestTimeout int64 `json:"request_timeout,omitempty" yaml:"request_timeout" toml:"request_timeout,omitempty"` // in second
 
-	FreqCtrlDuration int64 `json:"freq_ctrl_duration,omitempty" yaml:"freq_ctrl_duration"` // 频控窗口,最小30秒
+	FreqCtrlDuration int64 `json:"freq_ctrl_duration,omitempty" yaml:"freq_ctrl_duration" toml:"freq_ctrl_duration,omitempty"` // 频控窗口,最小30秒
 
-	API                  uri.API `json:"api_list" yaml:"api_list"`
-	SessionExpireSeconds int     `json:"session_max_age,omitempty" yaml:"session_max_age"`
+	API                  uri.API `json:"api_list" yaml:"api_list" toml:"api_list"`
+	SessionExpireSeconds int     `json:"session_max_age,omitempty" yaml:"session_max_age" toml:"session_max_age,omitempty"`
 
-	Domain string `json:"domain,omitempty" yaml:"domain"` // eg: .baidu.com
+	Domain string `json:"domain,omitempty" yaml:"domain" toml:"domain,omitempty"` // eg: .baidu.com
+}
+
+func (config Configure) ToJSON() []byte {
+	data, _ := json.MarshalIndent(config, "", "    ")
+	return data
+}
+
+func (config Configure) ToTOML() []byte {
+	var buf bytes.Buffer
+	writer := bufio.NewWriter(&buf)
+	encoder := toml.NewEncoder(writer)
+	encoder.Encode(config)
+	writer.Flush()
+	return buf.Bytes()
 }
 
 func (config Configure) String() string {
@@ -189,11 +206,24 @@ func LoadConfig(config_filename string, config *Configure) error {
 	return nil
 }
 
+func LoadTOMLConfig(config_filename string, config *Configure) error {
+	if config_filename == "" {
+		return fmt.Errorf("no config file")
+	}
+	if _, err := toml.DecodeFile(config_filename, config); err != nil {
+		return err
+	}
+	if err := config.API.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func InitConfig(config_filename string) {
 	var err error
 	confObj := Get()
 	if config_filename != "" {
-		err = LoadConfig(config_filename, confObj)
+		err = LoadTOMLConfig(config_filename, confObj)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "load config failed![Err:%s]\n", err.Error())
 			os.Exit(1)
@@ -209,15 +239,23 @@ func InitConfig(config_filename string) {
 			LogDir: "./log",
 			API: uri.API{Paths: []uri.APIPath{
 				{
-					White: []string{"/*any"},
+					White: []string{"/example1/*any"},
 					Proxy: &uri.APIProxy{
 						Host: "localhost" + port,
 					},
 				},
+				{
+					White: []string{"/example2/get"},
+					Proxy: &uri.APIProxy{
+						Host:   "http://httpbin.org",
+						Prefix: "/example2",
+					},
+				},
 			}},
 		}
-		data, _ := json.MarshalIndent(confObj, "", "    ")
-		fn := "./simplest.conf"
+		confObj.SetDefaults()
+		data := confObj.ToTOML()
+		fn := "./simplest.toml"
 		if _, err = os.Stat(fn); os.IsNotExist(err) {
 			ioutil.WriteFile(fn, data, 0644)
 			fmt.Printf("no config file found by flag [-c], use simplest config %s:\n%s\n", fn, string(data))

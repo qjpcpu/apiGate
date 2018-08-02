@@ -21,13 +21,13 @@ const (
 type FreqCtrl map[string]int64
 
 type API struct {
-	Paths    []APIPath `json:"paths" yaml:"paths"`
-	FreqCtrl FreqCtrl  `json:"freq,omitempty" yaml:"freq"`
+	Paths    []APIPath `json:"paths" yaml:"paths" toml:"paths"`
+	FreqCtrl FreqCtrl  `json:"freq,omitempty" yaml:"freq" toml:"freq,omitempty"`
 }
 
 type APIProxy struct {
-	Host   string `json:"host" yaml:"host"`
-	Prefix string `json:"trim,omitempty" yaml:"trim"`
+	Host   string `json:"host" yaml:"host" toml:"host"`
+	Prefix string `json:"trim,omitempty" yaml:"trim"  toml:"trim,omitempty"`
 }
 
 func (ap *APIProxy) Scheme() string {
@@ -73,10 +73,10 @@ func (ap APIProxy) GenRouterSetting(routerPath string) myrouter.HostSetting {
 }
 
 type APIPath struct {
-	White  []string  `json:"white_list,omitempty" yaml:"white_list,omitempty"`
-	Normal []string  `json:"normal_list,omitempty" yaml:"normal_list,omitempty"`
-	Black  []string  `json:"black_list,omitempty" yaml:"black_list,omitempty"`
-	Proxy  *APIProxy `json:"proxy,omitempty" yaml:"proxy,omitempty"`
+	White  []string  `json:"white_list,omitempty" yaml:"white_list,omitempty" toml:"white_list,omitempty"`
+	Normal []string  `json:"normal_list,omitempty" yaml:"normal_list,omitempty" toml:"normal_list,omitempty"`
+	Black  []string  `json:"black_list,omitempty" yaml:"black_list,omitempty" toml:"black_list,omitempty"`
+	Proxy  *APIProxy `json:"proxy,omitempty" yaml:"proxy,omitempty" toml:"proxy,omitempty"`
 }
 
 func FindUri(router *myrouter.Router, path string) (*myrouter.HostSetting, bool) {

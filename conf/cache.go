@@ -40,17 +40,17 @@ func GetFreqCtrl(threshold, window int64) *freqctrl.FreqCtrl {
 }
 
 type CacheConfig struct {
-	RedisNetwork        string `json:"network,omitempty" yaml:"network"`
-	RedisAddress        string `json:"addr,omitempty" yaml:"addr"`
-	RedisPassword       string `json:"password,omitempty" yaml:"password"`
-	RedisConnectTimeout int    `json:"conn_timeout,omitempty" yaml:"conn_timeout"`
-	RedisReadTimeout    int    `json:"read_timeout,omitempty" yaml:"read_timeout"`
-	RedisWriteTimeout   int    `json:"write_timeout,omitempty" yaml:"write_timeout"`
-	RedisMaxActive      int    `json:"max_active,omitempty" yaml:"max_active"`
-	RedisMaxIdle        int    `json:"max_idle,omitempty" yaml:"max_idle"`
-	RedisIdleTimeout    int    `json:"idle_timeout,omitempty" yaml:"idle_timeout"`
-	RedisWait           bool   `json:"wait,omitempty" yaml:"wait"`
-	RedisDb             string `json:"db_num,omitempty" yaml:"db_num"`
+	RedisNetwork        string `json:"network,omitempty" yaml:"network" toml:"network,omitempty"`
+	RedisAddress        string `json:"addr,omitempty" yaml:"addr" toml:"addr,omitempty"`
+	RedisPassword       string `json:"password,omitempty" yaml:"password" toml:"password,omitempty"`
+	RedisConnectTimeout int    `json:"conn_timeout,omitempty" yaml:"conn_timeout" toml:"conn_timeout,omitempty"`
+	RedisReadTimeout    int    `json:"read_timeout,omitempty" yaml:"read_timeout" toml:"read_timeout,omitempty"`
+	RedisWriteTimeout   int    `json:"write_timeout,omitempty" yaml:"write_timeout" toml:"write_timeout,omitempty"`
+	RedisMaxActive      int    `json:"max_active,omitempty" yaml:"max_active" toml:"max_active,omitempty"`
+	RedisMaxIdle        int    `json:"max_idle,omitempty" yaml:"max_idle" toml:"max_idle,omitempty"`
+	RedisIdleTimeout    int    `json:"idle_timeout,omitempty" yaml:"idle_timeout" toml:"idle_timeout,omitempty"`
+	RedisWait           bool   `json:"wait,omitempty" yaml:"wait" toml:"wait,omitempty"`
+	RedisDb             string `json:"db_num,omitempty" yaml:"db_num" toml:"db_num,omitempty"`
 }
 
 func (conf *CacheConfig) NewRedisPool() *redis.Pool {
