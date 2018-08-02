@@ -50,7 +50,7 @@ type CacheConfig struct {
 	RedisMaxIdle        int    `json:"max_idle,omitempty" yaml:"max_idle" toml:"max_idle,omitempty"`
 	RedisIdleTimeout    int    `json:"idle_timeout,omitempty" yaml:"idle_timeout" toml:"idle_timeout,omitempty"`
 	RedisWait           bool   `json:"wait,omitempty" yaml:"wait" toml:"wait,omitempty"`
-	RedisDb             string `json:"db_num,omitempty" yaml:"db_num" toml:"db_num,omitempty"`
+	RedisDb             int    `json:"db_num,omitempty" yaml:"db_num" toml:"db_num,omitempty"`
 }
 
 func (conf *CacheConfig) NewRedisPool() *redis.Pool {
@@ -73,7 +73,7 @@ func (conf *CacheConfig) NewRedisPool() *redis.Pool {
 				}
 			}
 
-			if len(conf.RedisDb) > 0 {
+			if conf.RedisDb > 0 {
 				if _, err = c.Do("SELECT", conf.RedisDb); err != nil {
 					c.Close()
 					return nil, err
@@ -97,9 +97,6 @@ func (conf *CacheConfig) NewRedisPool() *redis.Pool {
 func (cc *CacheConfig) setDefault() {
 	if cc.RedisNetwork == "" {
 		cc.RedisNetwork = "tcp"
-	}
-	if cc.RedisDb == "" {
-		cc.RedisDb = "0"
 	}
 	if cc.RedisAddress == "" {
 		cc.RedisAddress = "127.0.0.1:6379"
