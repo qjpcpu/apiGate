@@ -105,11 +105,8 @@ func IsWhiteUri(c *gin.Context) bool {
 
 // 写入用户session信息:http response Set-Cookie,服务端session,gin Context UserId,http proxy Header
 // 如果未提供指定sessionID则自动生成
-func writeUserServerSessionInfo(c *gin.Context, user_id string, session_ids ...string) (string, error) {
-	var session_id string
-	if len(session_ids) > 0 && session_ids[0] != "" {
-		session_id = session_ids[0]
-	} else {
+func writeUserServerSessionInfo(c *gin.Context, user_id string, session_id string) (string, error) {
+	if session_id == "" {
 		session_id = uid.GenUniqueId()
 	}
 	c.Request.Header.Set(conf.COMM_USER_ID, user_id)

@@ -116,6 +116,7 @@ func FindBuildinUri(host, path string) (*myrouter.HostSetting, bool) {
 	return FindUri(_buildin_uri_routers[rindex], path)
 }
 
+// host is useless, math rule only by path
 func FindFreqUri(host, path string) (*myrouter.HostSetting, bool) {
 	rindex := calcRouterIndex()
 	path = fmt.Sprintf("%s%s", FREQ_PATH_PREFIX, path)
