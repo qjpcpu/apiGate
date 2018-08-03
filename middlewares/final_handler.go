@@ -61,12 +61,6 @@ func FinalHandler() gin.HandlerFunc {
 		// log real request time
 		log.Infof("%s cost time %vms", outreq.URL.String(), time.Now().Sub(reqStart).Nanoseconds()/1000000)
 
-		// catch http 401
-		if resp.StatusCode == http.StatusUnauthorized {
-			log.Infof("catch 401 of %s://%s%s", setting.Scheme, setting.Host, newPath)
-			RenderThenAbort(c, http.StatusUnauthorized, makeResponse(ResStateUnauthorized, nil))
-			return
-		}
 		for resp_header_key, _ := range resp.Header {
 			c.Writer.Header().Set(resp_header_key, resp.Header.Get(resp_header_key))
 		}
