@@ -100,6 +100,7 @@ func (api API) Validate() error {
 	return nil
 }
 
+// 创建路由可能会panic,所以需要包一层
 func (api API) doValidate(errmsg *string) {
 	vr := myrouter.New()
 	defer func() {
@@ -109,9 +110,27 @@ func (api API) doValidate(errmsg *string) {
 	}()
 LOOP:
 	for loop := true; loop; loop = false {
+		if len(api.Paths) == 0 {
+			*errmsg = "配置错误:无路由定义"
+			break LOOP
+		}
+		for url, limit := range api.FreqCtrl {
+			if limit < 1 {
+				*errmsg = fmt.Sprintf("%s频控过小", url)
+				break LOOP
+			}
+		}
 		for _, group := range api.Paths {
+			if len(group.Black) == 0 && len(group.White) == 0 && len(group.Normal) == 0 {
+				*errmsg = "配置错误:无路由定义"
+				break LOOP
+			}
+			if group.Proxy == nil {
+				*errmsg = "配置错误:无转发配置proxy"
+				break LOOP
+			}
 			if group.Proxy.Host == "" {
-				*errmsg = "no proxy host"
+				*errmsg = "配置错误:转发配置无host配置"
 				break LOOP
 			}
 			for _, p := range group.White {

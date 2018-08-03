@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/qjpcpu/apiGate/rr"
@@ -158,26 +157,6 @@ func (config *Configure) SetDefaults() error {
 	}
 	if config.LogFile == "" {
 		config.LogFile = "api.log"
-	}
-	api := config.API
-	if len(api.Paths) == 0 {
-		return errors.New("配置错误:无路由定义")
-	}
-	for url, limit := range api.FreqCtrl {
-		if limit < 1 {
-			return fmt.Errorf("%s频控每%vs不能小于1次", url, config.FreqCtrlDuration)
-		}
-	}
-	for _, g := range api.Paths {
-		if len(g.Black) == 0 && len(g.White) == 0 && len(g.Normal) == 0 {
-			return errors.New("配置错误:无路由定义")
-		}
-		if g.Proxy == nil {
-			return errors.New("配置错误:无转发配置proxy")
-		}
-		if g.Proxy.Host == "" {
-			return errors.New("配置错误:转发配置无host配置")
-		}
 	}
 	return nil
 }

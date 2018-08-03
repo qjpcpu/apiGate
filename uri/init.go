@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/qjpcpu/apiGate/myrouter"
 	"github.com/qjpcpu/apiGate/rr"
-	"os"
 	"sync"
 	"sync/atomic"
 )
@@ -26,6 +25,7 @@ func calcRouterIndex() int32 {
 	return _routerIndex % 2
 }
 
+// 进入此函数认为api合法
 func InitUri(api API) {
 	rindex := (_routerIndex + 1) % 2
 	_black_uri_router := myrouter.New()
@@ -45,10 +45,6 @@ func InitUri(api API) {
 		_freq_uri_router.HandlerFunc(URI_METHOD, p, hs)
 	}
 	for _, group := range api.Paths {
-		if len(group.Proxy.Host) == 0 {
-			fmt.Println("Please set  proxy host")
-			os.Exit(1)
-		}
 		_services.AddCluster(group.Proxy.HostWithoutScheme(), group.Proxy.Cluster)
 		for _, p := range group.White {
 			hs := group.Proxy.GenRouterSetting(p)
@@ -77,6 +73,15 @@ func InitUri(api API) {
 	freq_ctrl_routers[rindex] = _freq_uri_router
 	services[rindex] = _services
 	atomic.AddInt32(&_routerIndex, 1)
+}
+
+// hot-update
+func Update(api API) error {
+	if err := api.Validate(); err != nil {
+		return err
+	}
+	InitUri(api)
+	return nil
 }
 
 func initBuildinRouter() *myrouter.Router {
