@@ -7,7 +7,9 @@ import (
 	"github.com/qjpcpu/apiGate/conf"
 	ms "github.com/qjpcpu/apiGate/middlewares"
 	"github.com/qjpcpu/apiGate/uri"
+	"net/http"
 	"os"
+	"strings"
 )
 
 // version information
@@ -46,6 +48,9 @@ func startServer() {
 
 	var err error
 	if confobj := conf.Get(); confobj.SSLEnabled() {
+		if confobj.SSL.RedirectHttpPort != "" {
+			go redirectHttp2Https(*confobj.SSL)
+		}
 		err = ginengine.RunTLS(confobj.ListenAddr, confobj.SSL.CertFile, confobj.SSL.KeyFile)
 	} else {
 		err = ginengine.Run(confobj.ListenAddr)
@@ -54,7 +59,30 @@ func startServer() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+}
 
+func redirectHttp2Https(sslconfig conf.SSL) {
+	if sslconfig.RedirectHttpPort == "" {
+		return
+	}
+	sslport := conf.Get().ListenAddr
+	if sslport == ":443" {
+		sslport = ""
+	}
+	httpRouter := gin.Default()
+	httpRouter.Any("/*uri", func(c *gin.Context) {
+		rurl := c.Request.URL
+		rurl.Scheme = "https"
+		host := c.Request.Host
+		if strings.HasSuffix(host, sslconfig.RedirectHttpPort) {
+			host = strings.TrimSuffix(host, sslconfig.RedirectHttpPort)
+		}
+		rurl.Host = host + sslport
+		c.Redirect(http.StatusMovedPermanently, rurl.String())
+	})
+	if err := httpRouter.Run(sslconfig.RedirectHttpPort); err != nil {
+		fmt.Printf("redirect http to https fail:%v\n", err)
+	}
 }
 
 func parseArgs() {

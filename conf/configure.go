@@ -15,8 +15,9 @@ import (
 )
 
 type SSL struct {
-	CertFile string `json:"cert,omitempty" yaml:"cert" toml:"cert,omitempty"`
-	KeyFile  string `json:"key,omitempty" yaml:"key" toml:"key,omitempty"`
+	CertFile         string `json:"cert,omitempty" yaml:"cert" toml:"cert,omitempty"`
+	KeyFile          string `json:"key,omitempty" yaml:"key" toml:"key,omitempty"`
+	RedirectHttpPort string `json:"redirect_http_port,omitempty" toml:"redirect_http_port,omitempty"`
 }
 
 type Configure struct {
@@ -53,7 +54,7 @@ func (config Configure) ToTOML() []byte {
 }
 
 func (config Configure) String() string {
-	return fmt.Sprintf(`监听端口:  %s
+	return fmt.Sprintf(`监听端口:  %s%s
 开发模式:  %s
 日志目录:  %s
 跨域允许:  %s
@@ -66,6 +67,13 @@ func (config Configure) String() string {
 %s
 `,
 		config.ListenAddr,
+		func() string {
+			if config.SSLEnabled() {
+				return "(https)"
+			} else {
+				return "(http)"
+			}
+		}(),
 		func() string {
 			if IsDevMode() {
 				return "是"
