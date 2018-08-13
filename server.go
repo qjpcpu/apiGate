@@ -166,6 +166,7 @@ func main() {
 	conf.InitConfig(g_config_file)
 	conf.InitCache()
 	conf.InitIDGenerator(conf.Cache())
+	conf.InitHealthCheck()
 	uri.InitUri(conf.Get().API)
 	fmt.Print(conf.Get().String())
 	go hotupdateAPI(g_config_file)

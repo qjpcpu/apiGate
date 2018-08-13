@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"github.com/gin-gonic/gin"
 	"github.com/qjpcpu/apiGate/rr"
 	"github.com/qjpcpu/apiGate/uri"
 	"github.com/qjpcpu/log"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 )
@@ -18,6 +20,11 @@ type SSL struct {
 	CertFile       string `json:"cert,omitempty" yaml:"cert" toml:"cert,omitempty"`
 	KeyFile        string `json:"key,omitempty" yaml:"key" toml:"key,omitempty"`
 	EnableHttpPort string `json:"enable_http_port,omitempty" toml:"enable_http_port,omitempty"`
+}
+
+type HealthCheck struct {
+	Path     string `json:"path,omitempty" toml:"path,omitempty"`
+	Response string `json:"response,omitempty" toml:"response,omitempty"`
 }
 
 type Configure struct {
@@ -37,6 +44,8 @@ type Configure struct {
 	SessionExpireSeconds int     `json:"session_max_age,omitempty" yaml:"session_max_age" toml:"session_max_age,omitempty"`
 
 	Domain string `json:"domain,omitempty" yaml:"domain" toml:"domain,omitempty"` // eg: .baidu.com
+
+	HealthCheck HealthCheck `json:"health_check" toml:"health_check"`
 }
 
 func (config Configure) ToJSON() []byte {
@@ -59,6 +68,7 @@ func (config Configure) String() string {
 日志目录:  %s
 跨域允许:  %s
 频控窗口:  %s
+健康检查:  %s
 频控API:
 %s
 内置API:
@@ -98,6 +108,13 @@ func (config Configure) String() string {
 				return fmt.Sprintf("%vs", config.FreqCtrlDuration)
 			} else {
 				return fmt.Sprintf("%vs(无效,必须大于等于30s)", config.FreqCtrlDuration)
+			}
+		}(),
+		func() string {
+			if config.HealthCheck.Path != "" {
+				return config.HealthCheck.Path
+			} else {
+				return "(无)"
 			}
 		}(),
 		func() string {
@@ -282,5 +299,13 @@ func InitConfig(config_filename string) {
 	})
 	if IsDevMode() {
 		fmt.Println("===============APIGate运行在开发模式下!=================")
+	}
+}
+
+func InitHealthCheck() {
+	if hc := Get().HealthCheck; hc.Path != "" {
+		uri.SetRouter(hc.Path, func(c *gin.Context) {
+			c.String(http.StatusOK, "%s", hc.Response)
+		})
 	}
 }
