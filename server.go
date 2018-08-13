@@ -133,6 +133,31 @@ func parseArgs() {
 	}
 }
 
+func hotupdateAPI(config_file string) {
+	quit := make(chan os.Signal)
+	// signal USER1(10) to reload api
+	signal.Notify(quit, syscall.SIGUSR1)
+	for {
+		<-quit
+		for loop := true; loop; loop = false {
+			localCfg := conf.Configure{}
+			var err error
+			if err = conf.LoadTOMLConfig(config_file, &localCfg); err != nil {
+				break
+			}
+			if err = uri.Update(localCfg.API); err != nil {
+				break
+			}
+			if err != nil {
+				syslog.Printf("Failed to hotupdate API:%v", err)
+			} else {
+				syslog.Println("Hotupdate API success.")
+			}
+		}
+
+	}
+}
+
 func main() {
 	parseArgs()
 	if !conf.IsDevMode() {
@@ -143,5 +168,6 @@ func main() {
 	conf.InitIDGenerator(conf.Cache())
 	uri.InitUri(conf.Get().API)
 	fmt.Print(conf.Get().String())
+	go hotupdateAPI(g_config_file)
 	startServer()
 }
