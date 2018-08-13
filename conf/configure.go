@@ -15,9 +15,9 @@ import (
 )
 
 type SSL struct {
-	CertFile         string `json:"cert,omitempty" yaml:"cert" toml:"cert,omitempty"`
-	KeyFile          string `json:"key,omitempty" yaml:"key" toml:"key,omitempty"`
-	RedirectHttpPort string `json:"redirect_http_port,omitempty" toml:"redirect_http_port,omitempty"`
+	CertFile       string `json:"cert,omitempty" yaml:"cert" toml:"cert,omitempty"`
+	KeyFile        string `json:"key,omitempty" yaml:"key" toml:"key,omitempty"`
+	EnableHttpPort string `json:"enable_http_port,omitempty" toml:"enable_http_port,omitempty"`
 }
 
 type Configure struct {
@@ -69,7 +69,11 @@ func (config Configure) String() string {
 		config.ListenAddr,
 		func() string {
 			if config.SSLEnabled() {
-				return "(https)"
+				str := "(https)"
+				if config.SSL.EnableHttpPort != "" {
+					str += fmt.Sprintf(" %s(http)", config.SSL.EnableHttpPort)
+				}
+				return str
 			} else {
 				return "(http)"
 			}

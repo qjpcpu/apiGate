@@ -1,15 +1,20 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/qjpcpu/apiGate/conf"
 	ms "github.com/qjpcpu/apiGate/middlewares"
 	"github.com/qjpcpu/apiGate/uri"
+	syslog "log"
 	"net/http"
 	"os"
-	"strings"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
 // version information
@@ -24,6 +29,72 @@ var (
 )
 
 func startServer() {
+	var servers []*http.Server
+	for loop := true; loop; loop = false {
+		confobj := conf.Get()
+		// service https
+		if confobj.SSLEnabled() {
+			httpsServ := &http.Server{
+				Addr:    confobj.ListenAddr,
+				Handler: getEngine(),
+			}
+			servers = append(servers, httpsServ)
+			go func(cert, key string) {
+				if err := httpsServ.ListenAndServeTLS(cert, key); err != nil && err != http.ErrServerClosed {
+					syslog.Fatalf("listen:%s\n", err)
+				}
+			}(confobj.SSL.CertFile, confobj.SSL.KeyFile)
+			if confobj.SSL.EnableHttpPort != "" {
+				httpServ := &http.Server{
+					Addr:    confobj.SSL.EnableHttpPort,
+					Handler: getEngine(),
+				}
+				servers = append(servers, httpServ)
+				go func() {
+					if err := httpServ.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+						syslog.Fatalf("listen:%s\n", err)
+					}
+				}()
+			}
+			break
+		}
+		// service http
+		httpServ := &http.Server{
+			Addr:    confobj.ListenAddr,
+			Handler: getEngine(),
+		}
+		servers = append(servers, httpServ)
+		go func() {
+			if err := httpServ.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				syslog.Fatalf("listen:%s\n", err)
+			}
+		}()
+	}
+	if len(servers) == 0 {
+		panic("no servers lanched")
+	}
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, syscall.SIGABRT, syscall.SIGALRM, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	syslog.Println("shutdown apiGate...")
+	wg := new(sync.WaitGroup)
+	for i := range servers {
+		wg.Add(1)
+		go func(srv *http.Server) {
+			defer wg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := srv.Shutdown(ctx); err != nil {
+				syslog.Printf("apiGate shutdown:%v", err)
+			}
+		}(servers[i])
+	}
+	wg.Wait()
+	syslog.Println("apiGate exiting.")
+}
+
+func getEngine() *gin.Engine {
 	ginengine := gin.Default()
 	// allow *.com CORS
 	ginengine.Use(ms.CorsHandle())
@@ -45,44 +116,7 @@ func startServer() {
 	ginengine.HEAD("/*uri", ms.FinalHandler())
 	ginengine.PATCH("/*uri", ms.FinalHandler())
 	ginengine.OPTIONS("/*uri", ms.FinalHandler())
-
-	var err error
-	if confobj := conf.Get(); confobj.SSLEnabled() {
-		if confobj.SSL.RedirectHttpPort != "" {
-			go redirectHttp2Https(*confobj.SSL)
-		}
-		err = ginengine.RunTLS(confobj.ListenAddr, confobj.SSL.CertFile, confobj.SSL.KeyFile)
-	} else {
-		err = ginengine.Run(confobj.ListenAddr)
-	}
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-}
-
-func redirectHttp2Https(sslconfig conf.SSL) {
-	if sslconfig.RedirectHttpPort == "" {
-		return
-	}
-	sslport := conf.Get().ListenAddr
-	if sslport == ":443" {
-		sslport = ""
-	}
-	httpRouter := gin.Default()
-	httpRouter.Any("/*uri", func(c *gin.Context) {
-		rurl := c.Request.URL
-		rurl.Scheme = "https"
-		host := c.Request.Host
-		if strings.HasSuffix(host, sslconfig.RedirectHttpPort) {
-			host = strings.TrimSuffix(host, sslconfig.RedirectHttpPort)
-		}
-		rurl.Host = host + sslport
-		c.Redirect(http.StatusMovedPermanently, rurl.String())
-	})
-	if err := httpRouter.Run(sslconfig.RedirectHttpPort); err != nil {
-		fmt.Printf("redirect http to https fail:%v\n", err)
-	}
+	return ginengine
 }
 
 func parseArgs() {
