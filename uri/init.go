@@ -4,30 +4,22 @@ import (
 	"fmt"
 	"github.com/qjpcpu/apiGate/myrouter"
 	"github.com/qjpcpu/apiGate/rr"
-	"sync"
-	"sync/atomic"
+	"github.com/qjpcpu/atomswitch"
 )
 
 var (
-	RouterMutex          *sync.Mutex = &sync.Mutex{}
-	_routerIndex         int32       = 0
-	_black_uri_routers   [2]*myrouter.Router
-	_white_uri_routers   [2]*myrouter.Router
-	_normal_uri_routers  [2]*myrouter.Router
-	_buildin_uri_routers [2]*myrouter.Router
+	_black_uri_routers   = atomswitch.NewAtomicSwitcher(new(myrouter.Router))
+	_white_uri_routers   = atomswitch.NewAtomicSwitcher(new(myrouter.Router))
+	_normal_uri_routers  = atomswitch.NewAtomicSwitcher(new(myrouter.Router))
+	_buildin_uri_routers = atomswitch.NewAtomicSwitcher(new(myrouter.Router))
 	// 频控
-	freq_ctrl_routers [2]*myrouter.Router
+	freq_ctrl_routers = atomswitch.NewAtomicSwitcher(new(myrouter.Router))
 	// load balance
-	services [2]rr.Services
+	services = atomswitch.NewAtomicSwitcher(rr.Services{})
 )
-
-func calcRouterIndex() int32 {
-	return _routerIndex % 2
-}
 
 // 进入此函数认为api合法
 func InitUri(api API) {
-	rindex := (_routerIndex + 1) % 2
 	_black_uri_router := myrouter.New()
 	_white_uri_router := myrouter.New()
 	_normal_uri_router := myrouter.New()
@@ -66,13 +58,12 @@ func InitUri(api API) {
 		}
 	}
 	_buildin_uri_router := initBuildinRouter()
-	_buildin_uri_routers[rindex] = _buildin_uri_router
-	_black_uri_routers[rindex] = _black_uri_router
-	_white_uri_routers[rindex] = _white_uri_router
-	_normal_uri_routers[rindex] = _normal_uri_router
-	freq_ctrl_routers[rindex] = _freq_uri_router
-	services[rindex] = _services
-	atomic.AddInt32(&_routerIndex, 1)
+	_buildin_uri_routers.Put(_buildin_uri_router)
+	_black_uri_routers.Put(_black_uri_router)
+	_white_uri_routers.Put(_white_uri_router)
+	_normal_uri_routers.Put(_normal_uri_router)
+	freq_ctrl_routers.Put(_freq_uri_router)
+	services.Put(_services)
 }
 
 // hot-update
@@ -98,37 +89,31 @@ func initBuildinRouter() *myrouter.Router {
 }
 
 func FindBlackUri(host, path string) (*myrouter.HostSetting, bool) {
-	rindex := calcRouterIndex()
 	path = fmt.Sprintf("%s%s", OUTTER_PATH_PREFIX, path)
-	return FindUri(_black_uri_routers[rindex], path)
+	return FindUri(_black_uri_routers.Get().(*myrouter.Router), path)
 }
 
 func FindWhiteUri(host, path string) (*myrouter.HostSetting, bool) {
-	rindex := calcRouterIndex()
 	path = fmt.Sprintf("%s%s", OUTTER_PATH_PREFIX, path)
-	return FindUri(_white_uri_routers[rindex], path)
+	return FindUri(_white_uri_routers.Get().(*myrouter.Router), path)
 }
 
 func FindNormalUri(host, path string) (*myrouter.HostSetting, bool) {
-	rindex := calcRouterIndex()
 	path = fmt.Sprintf("%s%s", OUTTER_PATH_PREFIX, path)
-	return FindUri(_normal_uri_routers[rindex], path)
+	return FindUri(_normal_uri_routers.Get().(*myrouter.Router), path)
 }
 
 func FindBuildinUri(host, path string) (*myrouter.HostSetting, bool) {
-	rindex := calcRouterIndex()
 	path = fmt.Sprintf("%s%s", BUILDIN_PATH_PREFIX, path)
-	return FindUri(_buildin_uri_routers[rindex], path)
+	return FindUri(_buildin_uri_routers.Get().(*myrouter.Router), path)
 }
 
 // host is useless, math rule only by path
 func FindFreqUri(host, path string) (*myrouter.HostSetting, bool) {
-	rindex := calcRouterIndex()
 	path = fmt.Sprintf("%s%s", FREQ_PATH_PREFIX, path)
-	return FindUri(freq_ctrl_routers[rindex], path)
+	return FindUri(freq_ctrl_routers.Get().(*myrouter.Router), path)
 }
 
 func GetCluster(name string) (*rr.Cluster, bool) {
-	rindex := calcRouterIndex()
-	return services[rindex].GetCluster(name)
+	return services.Get().(rr.Services).GetCluster(name)
 }
