@@ -151,7 +151,9 @@ func hotupdateAPI(config_file string) {
 			if err != nil {
 				syslog.Printf("Failed to hotupdate API:%v", err)
 			} else {
-				syslog.Println("Hotupdate API success.")
+				syslog.Println("\nHotupdate API success.")
+				conf.Get().API = localCfg.API
+				syslog.Print(conf.Get().String())
 			}
 		}
 
