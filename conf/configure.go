@@ -294,8 +294,10 @@ func InitConfig(config_filename string) {
 		lvl = log.INFO
 	}
 	log.InitLog(log.LogOption{
-		LogFile: filepath.Join(confObj.LogDir, confObj.LogFile),
-		Level:   lvl,
+		LogFile:        filepath.Join(confObj.LogDir, confObj.LogFile),
+		Level:          lvl,
+		Format:         log.SimpleColorFormat,
+		CreateShortcut: true,
 	})
 	if IsDevMode() {
 		fmt.Println("===============APIGate运行在开发模式下!=================")
