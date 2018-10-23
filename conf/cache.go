@@ -35,7 +35,7 @@ return serv_id
 }
 
 func GetFreqCtrl(threshold, window int64) *freqctrl.FreqCtrl {
-	fc, _ := freqctrl.New(g_cache, "apigatefreqctrl", threshold, window)
+	fc, _ := freqctrl.NewWithNamespace(g_cache, "apigatefreqctrl", threshold, window)
 	return fc
 }
 
