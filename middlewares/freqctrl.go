@@ -30,7 +30,7 @@ func FreqChecker() gin.HandlerFunc {
 			return
 		}
 		freq := conf.GetFreqCtrl(limit, conf.Get().FreqCtrlDuration)
-		if f := freq.TickRule(userId, hs.RouterPath); f > 1.0 {
+		if f := freq.Tick(userId, hs.RouterPath); f > 1.0 {
 			log.Infof("[frequency exceeded],target:%s path:%s hit:%v ", userId, c.Request.URL.Path, f)
 			RenderThenAbort(c, http.StatusTooManyRequests, makeResponse(ResStateReqExceeded, nil))
 			return
